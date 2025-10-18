@@ -1,0 +1,141 @@
+"""
+SEED Platform (TM), Copyright (c) Alliance for Sustainable Energy, LLC, and other contributors.
+See also https://github.com/SEED-platform/seed/blob/main/LICENSE.md
+
+seed local_untracked.py
+
+    For this to work with dev settings:
+        - run with dev settings:
+            $ export DJANGO_SETTINGS_MODULE=config.settings.dev
+            or
+            $ ./manage.py runserver --settings=config.settings.dev
+        - add your settings. Make sure to update the DATABASES, AWS related configurations, and
+            CACHES (i.e., everything here starting with 'your-')
+    For local dev, all these services can run locally on localhost, 127.0.0.1, or 0.0.0.0.
+"""
+
+import os
+import ssl
+from kombu import Exchange, Queue
+
+# ============================ General settings and flags ============================
+COMPRESS_ENABLED = False
+DOMAIN_URLCONFS = {"default": "config.urls"}
+DEBUG = True  # Set to False if this is being used in production mode. If this is set as false, then
+# you will need to configure nginx to serve the static assets. Deploying with docker is recommended
+# and handles setting up nginx.
+INTERNAL_IPS = ("127.0.0.1",)
+
+# MapQuestAPI key for geocoding
+MAPQUEST_API_KEY = os.environ.get("MAPQUEST_API_KEY", "a-mapquest-api-key")
+
+# SECRET_KEY is set here (or in your env variable)
+# You can create a key from https://www.miniwebtool.com/django-secret-key-generator/
+# SECRET_KEY = 'default-your-secret-key-here'
+
+# MapQuest API key for testing only - A valid key is only needed when refreshing VCR cassettes.
+# Keys for app users are attached to each organization.
+TESTING_MAPQUEST_API_KEY = os.environ.get("TESTING_MAPQUEST_API_KEY", "<your_key_here>")
+
+# These are the test keys
+GOOGLE_RECAPTCHA_SITE_KEY = os.environ.get("GOOGLE_RECAPTCHA_SITE_KEY", "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI")
+GOOGLE_RECAPTCHA_SECRET_KEY = os.environ.get("GOOGLE_RECAPTCHA_SECRET_KEY", "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe")
+
+# email through SES (django-ses)
+# EMAIL_BACKEND = 'django_ses.SESBackend'
+# AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+# AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+# AWS_SES_REGION_NAME = 'us-west-2'
+# AWS_SES_REGION_ENDPOINT = 'email.us-west-2.amazonaws.com'
+# SERVER_EMAIL = 'info@seed-platform.org'
+# DEFAULT_FROM_EMAIL = 'info@seed-platform.org'
+
+
+# Sentry Configuration (Optional)
+# import sentry_sdk
+# from sentry_sdk.integrations.django import DjangoIntegration
+# sentry_sdk.init(
+#     dsn="https://<user>@<key>.ingest.sentry.io/<job>",
+#     integrations=[
+#         DjangoIntegration(),
+#     ],
+#
+#     # Set traces_sample_rate to 1.0 to capture 100%
+#     # of transactions for performance monitoring.
+#     # We recommend adjusting this value in production.
+#     traces_sample_rate=1.0,
+#
+#     # If you wish to associate users to errors (assuming you are using
+#     # django.contrib.auth) you may enable sending PII data.
+#     send_default_pii=True
+# )
+
+
+# ================================= Database settings ===============================
+DATABASES = {
+    "default": {
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": "seed",
+        "USER": "seeduser",
+        "PASSWORD": "20Pby2Pqm/LDtJyL5MEQJjw3kkhxAfLbZOKAp81Dl/+ACRC+bJLy",
+        "HOST": "seed-postgresql.postgres.database.azure.com",
+        "PORT": "5432",
+    }
+}
+
+# =============================== Celery/Redis Cache Settings (No Password) =========
+CELERY_BROKER_URL = "rediss://:o4qlTZhnAvU6f7G9PZzQ8swv2SDZ1ZdZ5AzCaLad00Y%3D@seed-redis.redis.cache.windows.net:6380/0?ssl_cert_reqs=CERT_NONE"
+#CELERY_BROKER_URL = "redis://localhost:6379/1"
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "ssl_cert_reqs": ssl.CERT_NONE,  # Azure Redis needs TLS but doesn’t provide a cert
+}
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "rediss://:o4qlTZhnAvU6f7G9PZzQ8swv2SDZ1ZdZ5AzCaLad00Y%3D@seed-redis.redis.cache.windows.net:6380/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "ssl_cert_reqs": None  # Use None instead of ssl.CERT_NONE for django-redis
+            }
+        }
+    }
+}
+
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_TASK_DEFAULT_QUEUE = "seed-local"
+CELERY_TASK_QUEUES = (Queue(CELERY_TASK_DEFAULT_QUEUE, Exchange(CELERY_TASK_DEFAULT_QUEUE), routing_key=CELERY_TASK_DEFAULT_QUEUE),)
+
+# =============================== Celery/Redis Cache Settings (w/Password) =========
+# CELERY_BROKER_URL = 'redis://:your-redis-password@your-cache-url:6379/1'
+#
+# CACHES = {
+#   'default': {
+#        'BACKEND': 'django_redis.cache.RedisCache',
+#        'LOCATION': CELERY_BROKER_URL,
+#    }
+# }
+#
+# CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+# CELERY_TASK_DEFAULT_QUEUE = 'seed-local'
+# CELERY_TASK_QUEUES = (
+#    Queue(
+#        CELERY_TASK_DEFAULT_QUEUE,
+#        Exchange(CELERY_TASK_DEFAULT_QUEUE),
+#        routing_key=CELERY_TASK_DEFAULT_QUEUE
+#    ),
+# )
+
+
+# =================================== Logging =======================================
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"level": "ERROR", "class": "logging.StreamHandler"}},
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
+        },
+    },
+}
