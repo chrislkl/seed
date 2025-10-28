@@ -84,7 +84,7 @@ DATABASES = {
 }
 
 # =============================== Celery/Redis Cache Settings (No Password) =========
-CELERY_BROKER_URL = "rediss://:o4qlTZhnAvU6f7G9PZzQ8swv2SDZ1ZdZ5AzCaLad00Y%3D@seed-redis.redis.cache.windows.net:6380/0?ssl_cert_reqs=CERT_NONE"
+CELERY_BROKER_URL = "rediss://:pFfkJBUkOzKr24mOWETc5Ontror4wIYJzAzCaB5WRlI=@seed-managed-redis-prod.canadacentral.redis.azure.net:10000/0?ssl_cert_reqs=CERT_NONE"
 #CELERY_BROKER_URL = "redis://localhost:6379/1"
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "ssl_cert_reqs": ssl.CERT_NONE,  # Azure Redis needs TLS but doesn’t provide a cert
@@ -92,7 +92,7 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "rediss://:o4qlTZhnAvU6f7G9PZzQ8swv2SDZ1ZdZ5AzCaLad00Y%3D@seed-redis.redis.cache.windows.net:6380/0",
+        "LOCATION": "rediss://:pFfkJBUkOzKr24mOWETc5Ontror4wIYJzAzCaB5WRlI=@seed-managed-redis-prod.canadacentral.redis.azure.net:10000/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_KWARGS": {

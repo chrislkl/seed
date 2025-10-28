@@ -16,6 +16,7 @@ from seed.landing.views import (
     password_reset_complete,
     password_reset_done,
     signup,
+    health,
 )
 
 urlpatterns = [
@@ -32,6 +33,7 @@ urlpatterns = [
     re_path(r"^accounts/setup/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,32})/$", signup, name="signup"),
     path("password_change/", PasswordChangeView.as_view(), {"template_name": "landing/password_change_form.html"}, name="password_change"),
     path("password_change/done/", PasswordChangeDoneView.as_view(), {"template_name": "landing/password_change_done.html"}),
+    path("health/", health),
 ]
 
 if settings.INCLUDE_ACCT_REG:

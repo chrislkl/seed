@@ -25,6 +25,7 @@ from django.views.decorators.csrf import csrf_protect
 from django_otp import devices_for_user
 from django_otp.plugins.otp_email.models import EmailDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django.http import HttpResponse
 from two_factor.views.core import LoginView
 
 from seed.landing.models import SEEDUser
@@ -35,6 +36,9 @@ from .forms import CustomCreateUserForm
 
 logger = logging.getLogger(__name__)
 
+
+def health(request):
+    return HttpResponse("OK")
 
 def landing_page(request):
     if request.user.is_authenticated:
